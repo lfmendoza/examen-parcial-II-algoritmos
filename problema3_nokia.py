@@ -25,7 +25,13 @@ Complejidad: O(n) tiempo (10 estados por nivel, sumas acotadas) y O(1)
 memoria si se trabaja con dos arreglos rolling de tamaño 10.
 """
 
+import sys
 from typing import Dict, List
+
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except (AttributeError, ValueError):
+    pass
 
 
 # Tabla de vecinos del teclado del Nokia 3230.
@@ -108,59 +114,122 @@ def listar_secuencias_nokia(n: int) -> List[str]:
     return secuencias
 
 
+def formatear_combinaciones(secuencias: List[str],
+                            max_completo: int = 50,
+                            cabeza: int = 20,
+                            cola: int = 5,
+                            ancho: int = 68) -> str:
+    """
+    Construye una representación legible de la lista de secuencias.
+
+    - Si la cantidad total cabe (≤ max_completo), se imprimen todas en
+      orden, separadas por comas y rodeadas por corchetes, con saltos
+      de línea cada `ancho` columnas.
+    - Si excede el umbral, se imprimen las primeras `cabeza` y las
+      últimas `cola`, con '...' entre ambas, replicando el estilo
+      usado por el enunciado.
+    """
+    import textwrap
+
+    total = len(secuencias)
+    if total <= max_completo:
+        cuerpo = ", ".join(secuencias)
+    else:
+        cuerpo = (
+            ", ".join(secuencias[:cabeza])
+            + ", ..., "
+            + ", ".join(secuencias[-cola:])
+        )
+
+    texto = "[" + cuerpo + "]"
+    return textwrap.fill(
+        texto,
+        width=ancho,
+        initial_indent="    ",
+        subsequent_indent="     ",
+        break_long_words=False,
+        break_on_hyphens=False,
+    )
+
+
+def encabezado_caso(titulo: str) -> None:
+    """Imprime un separador y título de caso de prueba."""
+    print("-" * 60)
+    print(titulo)
+    print("-" * 60)
+
+
 # -------------------- Casos de prueba --------------------
 if __name__ == "__main__":
     print("=" * 60)
     print("PROBLEMA 3 - COMBINACIONES NOKIA 3230 (programación dinámica)")
     print("=" * 60)
+    print()
 
     # Caso 1: ejemplo del enunciado, n=2 -> 36.
-    print("Caso de prueba 1: n = 2 (ejemplo del enunciado)")
+    encabezado_caso("Caso de prueba 1: n = 2 (ejemplo del enunciado)")
     n = 2
     total = contar_secuencias_nokia(n)
     secuencias = listar_secuencias_nokia(n)
-    print(f"  Total por DP: {total}")
-    print(f"  Total por enumeración: {len(secuencias)}")
-    print(f"  Primeras 16 secuencias enumeradas: {secuencias[:16]}")
+    print(f"  Total (DP):           {total}")
+    print(f"  Total (enumeración):  {len(secuencias)}   ← validación cruzada")
+    print(f"  Combinaciones encontradas:")
+    print(formatear_combinaciones(secuencias))
     assert total == 36, "Inconsistencia con el ejemplo del enunciado"
     print("  Verificado contra el enunciado: 36 ✓")
     print()
 
     # Caso 2: caso base n=1 -> 10 (cada dígito por sí solo).
-    print("Caso de prueba 2: n = 1 (caso base)")
-    total = contar_secuencias_nokia(1)
-    print(f"  Total: {total}")
+    encabezado_caso("Caso de prueba 2: n = 1 (caso base)")
+    n = 1
+    total = contar_secuencias_nokia(n)
+    secuencias = listar_secuencias_nokia(n)
+    print(f"  Total (DP):           {total}")
+    print(f"  Total (enumeración):  {len(secuencias)}   ← validación cruzada")
+    print(f"  Combinaciones encontradas:")
+    print(formatear_combinaciones(secuencias))
     assert total == 10
     print("  Verificado: 10 ✓")
     print()
 
     # Caso 3: n=3, verificación cruzada DP vs enumeración exhaustiva.
-    print("Caso de prueba 3: n = 3 (verificación cruzada DP vs enumeración)")
-    total_dp = contar_secuencias_nokia(3)
-    secuencias_3 = listar_secuencias_nokia(3)
-    total_enum = len(secuencias_3)
-    print(f"  Total por DP: {total_dp}")
-    print(f"  Total por enumeración: {total_enum}")
+    encabezado_caso("Caso de prueba 3: n = 3 (verificación cruzada DP vs enumeración)")
+    n = 3
+    total_dp = contar_secuencias_nokia(n)
+    secuencias = listar_secuencias_nokia(n)
+    total_enum = len(secuencias)
+    print(f"  Total (DP):           {total_dp}")
+    print(f"  Total (enumeración):  {total_enum}   ← validación cruzada")
+    print(f"  Combinaciones encontradas:")
+    print(formatear_combinaciones(secuencias))
     assert total_dp == total_enum, "DP y enumeración discrepan"
     print(f"  Coinciden: {total_dp} ✓")
     print()
 
     # Caso 4: n=5, verificación cruzada para confirmar correctitud.
-    print("Caso de prueba 4: n = 5 (escala media, verificación cruzada)")
-    total_dp = contar_secuencias_nokia(5)
-    total_enum = len(listar_secuencias_nokia(5))
-    print(f"  Total por DP: {total_dp}")
-    print(f"  Total por enumeración: {total_enum}")
+    encabezado_caso("Caso de prueba 4: n = 5 (escala media, verificación cruzada)")
+    n = 5
+    total_dp = contar_secuencias_nokia(n)
+    secuencias = listar_secuencias_nokia(n)
+    total_enum = len(secuencias)
+    print(f"  Total (DP):           {total_dp}")
+    print(f"  Total (enumeración):  {total_enum}   ← validación cruzada")
+    print(f"  Combinaciones encontradas:")
+    print(formatear_combinaciones(secuencias))
     assert total_dp == total_enum
     print(f"  Coinciden: {total_dp} ✓")
     print()
 
     # Caso 5: n grande, donde la enumeración sería inviable pero la DP
-    # corre en milisegundos.
-    print("Caso de prueba 5: n = 50 (la DP escala, la enumeración no)")
+    # corre en milisegundos. No listamos las combinaciones porque
+    # generarlas requeriría espacio del orden de 4^50 ≈ 10^30.
+    encabezado_caso("Caso de prueba 5: n = 50 (la DP escala, la enumeración no)")
     total = contar_secuencias_nokia(50)
-    print(f"  Total: {total}")
-    print(f"  (Enumeración tendría tamaño del orden de 4^50 ≈ 1.27e30)")
+    print(f"  Total (DP):  {total}")
+    print(f"  Combinaciones encontradas:")
+    print(f"    [imposible enumerar — habría {total:,} secuencias]")
+    print(f"    (almacenarlas requeriría memoria del orden de 10^30 bytes;")
+    print(f"     la DP las cuenta en O(n) sin generarlas explícitamente)")
     print()
 
     print("Todos los casos pasaron correctamente.")
